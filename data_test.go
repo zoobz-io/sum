@@ -28,3 +28,7 @@ func TestNewStore(t *testing.T) {
 func TestNewBucket(t *testing.T) {
 	t.Skip("requires bucket provider - see testing/integration/data_test.go")
 }
+
+func TestNewSearch(t *testing.T) {
+	t.Skip("requires search provider - see testing/integration/data_test.go")
+}
