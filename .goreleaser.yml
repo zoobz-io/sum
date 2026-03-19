@@ -2,7 +2,7 @@ version: 2
 project_name: sum
 
 builds:
-  - skip: true  # Library packages don't build binaries
+  - skip: true # Library packages don't build binaries
 
 archives:
   - id: source
@@ -33,7 +33,7 @@ changelog:
 
 release:
   github:
-    owner: zoobzio
+    owner: zoobz-io
     name: sum
   draft: false
   prerelease: auto
