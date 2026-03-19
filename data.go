@@ -56,3 +56,22 @@ func NewBucket[M any](provider grub.BucketProvider, name string) (*Bucket[M], er
 	}
 	return &Bucket[M]{Bucket: bucket}, nil
 }
+
+// Search wraps grub.Search and registers with scio on creation.
+// Embed this type in your store structs to add custom query methods.
+type Search[M any] struct {
+	*grub.Search[M]
+}
+
+// NewSearch creates a Search[M] and registers it with the scio catalog.
+// Requires sum.New() to have been called first.
+func NewSearch[M any](provider grub.SearchProvider, index string) (*Search[M], error) {
+	search, err := grub.NewSearch[M](provider, index)
+	if err != nil {
+		return nil, err
+	}
+	if err := svc().catalog.RegisterSearch("srch://"+index, search.Atomic()); err != nil {
+		return nil, err
+	}
+	return &Search[M]{Search: search}, nil
+}
