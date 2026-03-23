@@ -24,7 +24,7 @@ package integration
 
 import (
     "testing"
-    sumtest "github.com/zoobzio/sum/testing"
+    sumtest "github.com/zoobz-io/sum/testing"
 )
 
 func TestServiceIntegration(t *testing.T) {

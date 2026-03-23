@@ -6,8 +6,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/zoobzio/capitan"
-	"github.com/zoobzio/sum"
+	"github.com/zoobz-io/capitan"
+	"github.com/zoobz-io/sum"
 )
 
 // Service locator benchmarks

@@ -1,35 +1,28 @@
 version: 2
-project_name: sum
 
 builds:
-  - skip: true # Library packages don't build binaries
-
-archives:
-  - id: source
-    files:
-      - "*.go"
-      - "go.mod"
-      - "go.sum"
-      - "LICENSE"
-      - "README.md"
-      - "Makefile"
-      - "docs/**/*"
-    name_template: "{{ .ProjectName }}_{{ .Version }}_source"
+  - skip: true
 
 changelog:
-  use: github
   sort: asc
   groups:
-    - title: "Features"
+    - title: Features
       regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
-    - title: "Bug Fixes"
+      order: 0
+    - title: Bug Fixes
       regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
-    - title: "Performance"
-      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Documentation
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
   filters:
     exclude:
       - "^docs:"
       - "^test:"
+      - "^chore:"
+      - "^ci:"
 
 release:
   github:
@@ -37,4 +30,10 @@ release:
     name: sum
   draft: false
   prerelease: auto
-  mode: append
+  header: |
+    ## What's Changed
+  footer: |
+    ## Installation
+    ```bash
+    go get github.com/zoobz-io/sum@{{ .Tag }}
+    ```

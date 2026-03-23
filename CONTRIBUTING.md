@@ -11,7 +11,7 @@ Thank you for your interest in contributing to sum.
 
 ```bash
 # Clone the repository
-git clone https://github.com/zoobzio/sum.git
+git clone https://github.com/zoobz-io/sum.git
 cd sum
 
 # Install development tools

@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-bench lint lint-fix coverage clean help check ci install-tools install-hooks
+.PHONY: test test-unit test-integration test-bench lint lint-fix security coverage clean help check ci install-tools install-hooks
 
 .DEFAULT_GOAL := help
 
@@ -11,10 +11,10 @@ test: ## Run all tests with race detector
 	@go test -v -race -tags testing ./...
 
 test-unit: ## Run unit tests only (short mode)
-	@go test -v -race -tags testing -short ./...
+	@go test -v -race -tags testing -short $(shell go list ./... | grep -v '/testing/')
 
 test-integration: ## Run integration tests
-	@go test -v -race -tags testing ./testing/integration/...
+	@go test -v -tags testing -timeout=10m ./testing/integration/...
 
 test-bench: ## Run benchmarks
 	@go test -tags testing -bench=. -benchmem -benchtime=1s ./testing/benchmarks/...
@@ -25,24 +25,24 @@ lint: ## Run linters
 lint-fix: ## Run linters with auto-fix
 	@golangci-lint run --config=.golangci.yml --fix
 
-coverage: ## Generate coverage report (unit + integration)
-	@go test -tags testing -coverprofile=coverage-unit.out -covermode=atomic ./...
-	@go test -tags testing -coverprofile=coverage-integration.out -covermode=atomic ./testing/integration/... 2>/dev/null || true
-	@echo "mode: atomic" > coverage.out
-	@tail -n +2 coverage-unit.out >> coverage.out
-	@tail -n +2 coverage-integration.out >> coverage.out 2>/dev/null || true
+security: ## Run security scanner
+	@gosec -quiet ./...
+
+coverage: ## Generate coverage report (HTML)
+	@go test -tags testing -coverprofile=coverage.out ./...
 	@go tool cover -html=coverage.out -o coverage.html
 	@go tool cover -func=coverage.out | tail -1
 	@echo "Coverage report: coverage.html"
 
 clean: ## Remove generated files
-	@rm -f coverage.out coverage.html coverage.txt coverage-unit.out coverage-integration.out
+	@rm -f coverage.out coverage.html coverage.txt
 	@find . -name "*.test" -delete
 	@find . -name "*.prof" -delete
 	@find . -name "*.out" -delete
 
 install-tools: ## Install development tools
 	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.7.2
+	@go install github.com/securego/gosec/v2/cmd/gosec@latest
 
 install-hooks: ## Install git pre-commit hook
 	@mkdir -p .git/hooks
@@ -51,8 +51,8 @@ install-hooks: ## Install git pre-commit hook
 	@chmod +x .git/hooks/pre-commit
 	@echo "Pre-commit hook installed"
 
-check: test lint ## Run tests and lint (quick validation)
+check: lint test ## Run lint and tests
 	@echo "All checks passed!"
 
-ci: clean lint test coverage test-bench ## Full CI simulation
+ci: clean check coverage ## Full CI simulation
 	@echo "CI simulation complete!"

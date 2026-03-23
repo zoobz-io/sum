@@ -2,8 +2,8 @@ package sum
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/zoobzio/astql"
-	"github.com/zoobzio/grub"
+	"github.com/zoobz-io/astql"
+	"github.com/zoobz-io/grub"
 )
 
 // Database wraps grub.Database and registers with scio on creation.

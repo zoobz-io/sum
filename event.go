@@ -3,8 +3,8 @@ package sum
 import (
 	"context"
 
-	"github.com/zoobzio/capitan"
-	"github.com/zoobzio/sentinel"
+	"github.com/zoobz-io/capitan"
+	"github.com/zoobz-io/sentinel"
 )
 
 type (
