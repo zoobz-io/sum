@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/zoobzio/cereal"
-	"github.com/zoobzio/rocco"
-	"github.com/zoobzio/scio"
+	"github.com/zoobz-io/cereal"
+	"github.com/zoobz-io/rocco"
+	"github.com/zoobz-io/scio"
 )
 
 // service is the singleton instance.

@@ -8,8 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/zoobzio/cereal"
-	"github.com/zoobzio/slush"
+	"github.com/zoobz-io/cereal"
+	"github.com/zoobz-io/slush"
 )
 
 // testUser is a minimal Cloner type for boundary tests.

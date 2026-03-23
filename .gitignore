@@ -29,3 +29,6 @@ vendor/
 *.prof
 *.pprof
 debug.test
+
+# Claude
+.claude/

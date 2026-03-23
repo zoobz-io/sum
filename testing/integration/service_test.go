@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zoobzio/rocco"
-	"github.com/zoobzio/sum"
-	sumtest "github.com/zoobzio/sum/testing"
+	"github.com/zoobz-io/rocco"
+	"github.com/zoobz-io/sum"
+	sumtest "github.com/zoobz-io/sum/testing"
 )
 
 // resetServiceSingleton resets the service singleton for testing.

@@ -4,7 +4,7 @@ package sum
 import (
 	"context"
 
-	"github.com/zoobzio/fig"
+	"github.com/zoobz-io/fig"
 )
 
 // Config loads configuration of type T via fig and registers it with the service locator.

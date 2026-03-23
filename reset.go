@@ -5,7 +5,7 @@ package sum
 import (
 	"sync"
 
-	"github.com/zoobzio/slush"
+	"github.com/zoobz-io/slush"
 )
 
 // Reset clears all registered services and resets initialization state.

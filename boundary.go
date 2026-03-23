@@ -1,8 +1,8 @@
 package sum
 
 import (
-	"github.com/zoobzio/cereal"
-	"github.com/zoobzio/rocco"
+	"github.com/zoobz-io/cereal"
+	"github.com/zoobz-io/rocco"
 )
 
 type (

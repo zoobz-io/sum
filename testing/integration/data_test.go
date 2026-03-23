@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/zoobzio/astql/postgres"
-	"github.com/zoobzio/grub"
-	"github.com/zoobzio/sum"
-	sumtest "github.com/zoobzio/sum/testing"
+	"github.com/zoobz-io/astql/postgres"
+	"github.com/zoobz-io/grub"
+	"github.com/zoobz-io/sum"
+	sumtest "github.com/zoobz-io/sum/testing"
 )
 
 // testModel represents a simple entity for testing database operations.
