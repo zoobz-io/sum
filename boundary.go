@@ -1,6 +1,8 @@
 package sum
 
 import (
+	"context"
+
 	"github.com/zoobz-io/cereal"
 	"github.com/zoobz-io/rocco"
 )
@@ -22,18 +24,27 @@ type (
 	MaskType = cereal.MaskType
 )
 
-// Boundary wraps a cereal Processor and auto-registers with the service registry.
-type Boundary[T cereal.Cloner[T]] struct {
+// Boundary defines the serialization lifecycle operations for a type.
+type Boundary[T any] interface {
+	Send(ctx context.Context, obj T) (T, error)
+	Receive(ctx context.Context, obj T) (T, error)
+	Store(ctx context.Context, obj T) (T, error)
+	Load(ctx context.Context, obj T) (T, error)
+}
+
+// boundary wraps a cereal Processor and auto-registers with the service registry.
+type boundary[T cereal.Cloner[T]] struct {
 	*cereal.Processor[T]
 }
 
 // NewBoundary creates a Boundary[T], applies shared capabilities from the Service,
 // and registers it in the service registry under the given key.
-func NewBoundary[T cereal.Cloner[T]](k Key) (*Boundary[T], error) {
+// Panics if cereal.NewProcessor fails (structurally unreachable for valid Cloner types).
+func NewBoundary[T cereal.Cloner[T]](k Key) Boundary[T] {
 	s := svc()
 	proc, err := cereal.NewProcessor[T]()
 	if err != nil {
-		return nil, err
+		panic("sum: NewBoundary: " + err.Error())
 	}
 
 	s.mu.RLock()
@@ -51,9 +62,9 @@ func NewBoundary[T cereal.Cloner[T]](k Key) (*Boundary[T], error) {
 	}
 	s.mu.RUnlock()
 
-	b := &Boundary[T]{Processor: proc}
-	Register[*Boundary[T]](k, b)
-	return b, nil
+	b := &boundary[T]{Processor: proc}
+	Register[Boundary[T]](k, b)
+	return b
 }
 
 // roccoCodec adapts a cereal.Codec to rocco.Codec.

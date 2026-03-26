@@ -60,15 +60,9 @@ func TestNewBoundary(t *testing.T) {
 	New()
 	k := Start()
 
-	b, err := NewBoundary[testUser](k)
-	if err != nil {
-		t.Fatalf("NewBoundary failed: %v", err)
-	}
+	b := NewBoundary[testUser](k)
 	if b == nil {
 		t.Fatal("expected non-nil boundary")
-	}
-	if b.Processor == nil {
-		t.Fatal("expected non-nil processor")
 	}
 
 	Freeze(k)
@@ -97,10 +91,7 @@ func TestCapabilityPropagation(t *testing.T) {
 	s.WithCodec(&testCodec{})
 
 	k := Start()
-	b, err := NewBoundary[testUser](k)
-	if err != nil {
-		t.Fatalf("NewBoundary failed: %v", err)
-	}
+	b := NewBoundary[testUser](k)
 	Freeze(k)
 
 	// Verify boundary was created with capabilities by exercising Receive/Send.
@@ -130,14 +121,11 @@ func TestBoundaryAutoRegistered(t *testing.T) {
 	New()
 	k := Start()
 
-	_, err := NewBoundary[testUser](k)
-	if err != nil {
-		t.Fatalf("NewBoundary failed: %v", err)
-	}
+	NewBoundary[testUser](k)
 	Freeze(k)
 
 	ctx := context.Background()
-	b := MustUse[*Boundary[testUser]](ctx)
+	b := MustUse[Boundary[testUser]](ctx)
 	if b == nil {
 		t.Fatal("expected non-nil boundary from MustUse")
 	}
@@ -156,7 +144,7 @@ func TestBoundaryMustUsePanicsWhenNotRegistered(t *testing.T) {
 	}()
 
 	ctx := context.Background()
-	MustUse[*Boundary[testUser]](ctx)
+	MustUse[Boundary[testUser]](ctx)
 }
 
 func TestCodecAdapterWiresToRocco(t *testing.T) {
