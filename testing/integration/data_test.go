@@ -63,14 +63,7 @@ func TestDatabaseIntegration(t *testing.T) {
 		sqlxDB.Exec(`DROP TABLE IF EXISTS test_models`)
 	})
 
-	database, err := sum.NewDatabase[testModel](sqlxDB, "test_models", postgres.New())
-	if err != nil {
-		t.Fatalf("NewDatabase failed: %v", err)
-	}
-
-	if database == nil {
-		t.Fatal("expected non-nil database")
-	}
+	database := sum.NewDatabase[testModel](sqlxDB, "test_models", postgres.New())
 
 	if database.Database == nil {
 		t.Error("expected non-nil embedded grub.Database")
