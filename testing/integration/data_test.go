@@ -63,14 +63,7 @@ func TestDatabaseIntegration(t *testing.T) {
 		sqlxDB.Exec(`DROP TABLE IF EXISTS test_models`)
 	})
 
-	database, err := sum.NewDatabase[testModel](sqlxDB, "test_models", postgres.New())
-	if err != nil {
-		t.Fatalf("NewDatabase failed: %v", err)
-	}
-
-	if database == nil {
-		t.Fatal("expected non-nil database")
-	}
+	database := sum.NewDatabase[testModel](sqlxDB, "test_models", postgres.New())
 
 	if database.Database == nil {
 		t.Error("expected non-nil embedded grub.Database")
@@ -134,14 +127,7 @@ func TestStoreIntegration(t *testing.T) {
 
 	_ = sum.Start()
 
-	store, err := sum.NewStore[testModel](mockStoreProvider{}, "test-store")
-	if err != nil {
-		t.Fatalf("NewStore failed: %v", err)
-	}
-
-	if store == nil {
-		t.Fatal("expected non-nil store")
-	}
+	store := sum.NewStore[testModel](mockStoreProvider{}, "test-store")
 
 	if store.Store == nil {
 		t.Error("expected non-nil embedded grub.Store")
@@ -197,14 +183,7 @@ func TestBucketIntegration(t *testing.T) {
 
 	_ = sum.Start()
 
-	bucket, err := sum.NewBucket[testModel](mockBucketProvider{}, "test-bucket")
-	if err != nil {
-		t.Fatalf("NewBucket failed: %v", err)
-	}
-
-	if bucket == nil {
-		t.Fatal("expected non-nil bucket")
-	}
+	bucket := sum.NewBucket[testModel](mockBucketProvider{}, "test-bucket")
 
 	if bucket.Bucket == nil {
 		t.Error("expected non-nil embedded grub.Bucket")
