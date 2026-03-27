@@ -31,12 +31,13 @@ type Store[M any] struct {
 
 // NewStore creates a Store[M] and registers it with the scio catalog.
 // Requires sum.New() to have been called first.
-func NewStore[M any](provider grub.StoreProvider, name string) (*Store[M], error) {
+// Panics if catalog registration fails (duplicate store name is a programmer error).
+func NewStore[M any](provider grub.StoreProvider, name string) *Store[M] {
 	store := grub.NewStore[M](provider)
 	if err := svc().catalog.RegisterStore("kv://"+name, store.Atomic()); err != nil {
-		return nil, err
+		panic("sum: NewStore: " + err.Error())
 	}
-	return &Store[M]{Store: store}, nil
+	return &Store[M]{Store: store}
 }
 
 // Bucket wraps grub.Bucket and registers with scio on creation.
@@ -47,12 +48,13 @@ type Bucket[M any] struct {
 
 // NewBucket creates a Bucket[M] and registers it with the scio catalog.
 // Requires sum.New() to have been called first.
-func NewBucket[M any](provider grub.BucketProvider, name string) (*Bucket[M], error) {
+// Panics if catalog registration fails (duplicate bucket name is a programmer error).
+func NewBucket[M any](provider grub.BucketProvider, name string) *Bucket[M] {
 	bucket := grub.NewBucket[M](provider)
 	if err := svc().catalog.RegisterBucket("bcs://"+name, bucket.Atomic()); err != nil {
-		return nil, err
+		panic("sum: NewBucket: " + err.Error())
 	}
-	return &Bucket[M]{Bucket: bucket}, nil
+	return &Bucket[M]{Bucket: bucket}
 }
 
 // Search wraps grub.Search and registers with scio on creation.
