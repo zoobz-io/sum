@@ -26,10 +26,10 @@ type Service struct {
 	encryptors map[cereal.EncryptAlgo]cereal.Encryptor
 	hashers    map[cereal.HashAlgo]cereal.Hasher
 	maskers    map[cereal.MaskType]cereal.Masker
-	closers    []namedCloser
 	engine     *rocco.Engine
 	catalog    *scio.Scio
 	codec      cereal.Codec
+	closers    []namedCloser
 	mu         sync.RWMutex
 }
 

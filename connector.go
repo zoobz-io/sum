@@ -24,8 +24,8 @@ var (
 
 // namedCloser pairs a name with an io.Closer for ordered shutdown.
 type namedCloser struct {
-	name   string
 	closer io.Closer
+	name   string
 }
 
 // Connect creates an infrastructure client via factory, registers it with slush,
@@ -51,7 +51,7 @@ func Connect[T any](ctx context.Context, k Key, name string, factory func(contex
 	if closer, ok := any(client).(io.Closer); ok {
 		s := svc()
 		s.mu.Lock()
-		s.closers = append(s.closers, namedCloser{name: name, closer: closer})
+		s.closers = append(s.closers, namedCloser{closer: closer, name: name})
 		s.mu.Unlock()
 	}
 	return nil
