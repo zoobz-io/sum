@@ -4,6 +4,7 @@ package sum
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -91,3 +92,83 @@ func TestConfigRequiredMissing(t *testing.T) {
 		t.Error("expected error for missing required field")
 	}
 }
+
+func TestConfigErrorIncludesTypeName(t *testing.T) {
+	Reset()
+	t.Cleanup(Reset)
+
+	k := Start()
+	ctx := context.Background()
+
+	err := Config[requiredConfig](ctx, k, nil)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if got := err.Error(); !strings.Contains(got, "requiredConfig") {
+		t.Errorf("expected error to contain type name 'requiredConfig', got: %s", got)
+	}
+}
+
+type secondConfig struct {
+	Value string `env:"TEST_SECOND_VALUE" default:"second"`
+}
+
+func TestConfigAll(t *testing.T) {
+	Reset()
+	t.Cleanup(Reset)
+
+	k := Start()
+	ctx := context.Background()
+
+	err := ConfigAll(
+		func() error { return Config[testConfig](ctx, k, nil) },
+		func() error { return Config[secondConfig](ctx, k, nil) },
+	)
+	if err != nil {
+		t.Fatalf("ConfigAll failed: %v", err)
+	}
+
+	cfg, err := Use[testConfig](ctx)
+	if err != nil {
+		t.Fatalf("Use testConfig failed: %v", err)
+	}
+	if cfg.Name != "default-name" {
+		t.Errorf("expected 'default-name', got '%s'", cfg.Name)
+	}
+
+	sec, err := Use[secondConfig](ctx)
+	if err != nil {
+		t.Fatalf("Use secondConfig failed: %v", err)
+	}
+	if sec.Value != "second" {
+		t.Errorf("expected 'second', got '%s'", sec.Value)
+	}
+}
+
+func TestConfigAllStopsOnFirstError(t *testing.T) {
+	Reset()
+	t.Cleanup(Reset)
+
+	k := Start()
+	ctx := context.Background()
+
+	called := false
+	err := ConfigAll(
+		func() error { return Config[requiredConfig](ctx, k, nil) },
+		func() error { called = true; return Config[testConfig](ctx, k, nil) },
+	)
+	if err == nil {
+		t.Fatal("expected error from first loader")
+	}
+	if called {
+		t.Error("second loader should not have been called")
+	}
+}
+
+func TestConfigAllEmpty(t *testing.T) {
+	err := ConfigAll()
+	if err != nil {
+		t.Errorf("expected nil error for empty ConfigAll, got: %v", err)
+	}
+}
+
