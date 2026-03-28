@@ -20,8 +20,8 @@ import (
 // WithObservability configures OTEL exporters and an aperture bridge for the service.
 // name is the OTEL service name. endpoint is the OTLP collector endpoint
 // (e.g., "http://localhost:4318").
-// Applies a default schema that logs all capitan events. Use Observability()
-// to access the aperture instance for custom schema configuration.
+// Aperture defaults to logging all capitan events. Use Observability()
+// to access the aperture instance for custom schema configuration via Apply.
 func (s *Service) WithObservability(ctx context.Context, name, endpoint string) error {
 	res, err := resource.New(ctx,
 		resource.WithAttributes(semconv.ServiceName(name)),
@@ -65,15 +65,6 @@ func (s *Service) WithObservability(ctx context.Context, name, endpoint string) 
 		mp.Shutdown(ctx)
 		lp.Shutdown(ctx)
 		return fmt.Errorf("observability aperture: %w", err)
-	}
-
-	// Default schema: log all events.
-	if err := a.Apply(aperture.Schema{}); err != nil {
-		a.Close()
-		tp.Shutdown(ctx)
-		mp.Shutdown(ctx)
-		lp.Shutdown(ctx)
-		return fmt.Errorf("observability schema: %w", err)
 	}
 
 	s.mu.Lock()
