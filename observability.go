@@ -37,11 +37,14 @@ func (s *Service) WithObservability(ctx context.Context, name, endpoint string) 
 
 	metricExp, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(endpoint))
 	if err != nil {
+		traceExp.Shutdown(ctx) //nolint:errcheck // best-effort cleanup
 		return fmt.Errorf("observability metric exporter: %w", err)
 	}
 
 	logExp, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL(endpoint))
 	if err != nil {
+		traceExp.Shutdown(ctx) //nolint:errcheck // best-effort cleanup
+		metricExp.Shutdown(ctx) //nolint:errcheck // best-effort cleanup
 		return fmt.Errorf("observability log exporter: %w", err)
 	}
 
@@ -60,10 +63,10 @@ func (s *Service) WithObservability(ctx context.Context, name, endpoint string) 
 
 	a, err := aperture.New(capitan.Default(), lp, mp, tp)
 	if err != nil {
-		// Shutdown providers on failure.
-		tp.Shutdown(ctx)
-		mp.Shutdown(ctx)
-		lp.Shutdown(ctx)
+		// Best-effort cleanup of providers on failure.
+		tp.Shutdown(ctx)  //nolint:errcheck
+		mp.Shutdown(ctx)  //nolint:errcheck
+		lp.Shutdown(ctx)  //nolint:errcheck
 		return fmt.Errorf("observability aperture: %w", err)
 	}
 

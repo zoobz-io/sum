@@ -3,6 +3,7 @@
 package sum
 
 import (
+	"context"
 	"sync"
 
 	"github.com/zoobz-io/slush"
@@ -21,6 +22,9 @@ func Reset() {
 		instance.codec = nil
 		if instance.aperture != nil {
 			instance.aperture.Close()
+		}
+		if instance.providers != nil {
+			instance.providers.Shutdown(context.Background())
 		}
 		instance.aperture = nil
 		instance.providers = nil
