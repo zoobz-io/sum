@@ -4,9 +4,9 @@ package sum
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/zoobz-io/fig"
+	"github.com/zoobz-io/sentinel"
 )
 
 // Config loads configuration of type T via fig and registers it with the service locator.
@@ -14,13 +14,14 @@ import (
 // Retrieve the configuration later with Use[T](ctx).
 // Errors are annotated with the type name for diagnostics.
 func Config[T any](ctx context.Context, k Key, provider fig.SecretProvider) error {
+	meta := sentinel.Inspect[T]()
 	var cfg T
 	var opts []fig.SecretProvider
 	if provider != nil {
 		opts = append(opts, provider)
 	}
 	if err := fig.LoadContext(ctx, &cfg, opts...); err != nil {
-		return fmt.Errorf("config %s: %w", reflect.TypeOf(cfg).Name(), err)
+		return fmt.Errorf("config %s: %w", meta.FQDN, err)
 	}
 	Register[T](k, cfg)
 	return nil
