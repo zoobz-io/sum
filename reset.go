@@ -18,6 +18,7 @@ func Reset() {
 		instance.encryptors = make(map[EncryptAlgo]Encryptor)
 		instance.hashers = make(map[HashAlgo]Hasher)
 		instance.maskers = make(map[MaskType]Masker)
+		instance.closers = nil
 		instance.codec = nil
 		instance.mu.Unlock()
 	}

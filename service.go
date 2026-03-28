@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/zoobz-io/capitan"
 	"github.com/zoobz-io/cereal"
 	"github.com/zoobz-io/rocco"
 	"github.com/zoobz-io/scio"
@@ -28,6 +29,7 @@ type Service struct {
 	engine     *rocco.Engine
 	catalog    *scio.Scio
 	codec      cereal.Codec
+	closers    []namedCloser
 	mu         sync.RWMutex
 }
 
@@ -113,11 +115,36 @@ func (s *Service) Start(host string, port int) error {
 }
 
 // Shutdown gracefully stops the service.
+// Closes infrastructure connections in reverse order before stopping the engine.
 func (s *Service) Shutdown(ctx context.Context) error {
 	if s.engine == nil {
 		return fmt.Errorf("service not started")
 	}
-	return s.engine.Shutdown(ctx)
+
+	// Shutdown engine first to stop accepting requests.
+	err := s.engine.Shutdown(ctx)
+
+	// Close infrastructure in reverse connection order.
+	s.mu.RLock()
+	closers := make([]namedCloser, len(s.closers))
+	copy(closers, s.closers)
+	s.mu.RUnlock()
+
+	for i := len(closers) - 1; i >= 0; i-- {
+		c := closers[i]
+		if cerr := c.closer.Close(); cerr != nil {
+			capitan.Error(ctx, SignalDisconnected,
+				KeyConnectorName.Field(c.name),
+				KeyConnectorError.Field(cerr),
+			)
+		} else {
+			capitan.Info(ctx, SignalDisconnected,
+				KeyConnectorName.Field(c.name),
+			)
+		}
+	}
+
+	return err
 }
 
 // Run starts the service and blocks until a shutdown signal is received.
