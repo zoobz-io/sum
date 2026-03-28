@@ -24,7 +24,7 @@ func Reset() {
 			instance.aperture.Close()
 		}
 		if instance.providers != nil {
-			instance.providers.Shutdown(context.Background())
+			_ = instance.providers.Shutdown(context.Background())
 		}
 		instance.aperture = nil
 		instance.providers = nil

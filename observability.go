@@ -37,14 +37,14 @@ func (s *Service) WithObservability(ctx context.Context, name, endpoint string) 
 
 	metricExp, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(endpoint))
 	if err != nil {
-		traceExp.Shutdown(ctx) //nolint:errcheck // best-effort cleanup
+		_ = traceExp.Shutdown(ctx)
 		return fmt.Errorf("observability metric exporter: %w", err)
 	}
 
 	logExp, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL(endpoint))
 	if err != nil {
-		traceExp.Shutdown(ctx) //nolint:errcheck // best-effort cleanup
-		metricExp.Shutdown(ctx) //nolint:errcheck // best-effort cleanup
+		_ = traceExp.Shutdown(ctx)
+		_ = metricExp.Shutdown(ctx)
 		return fmt.Errorf("observability log exporter: %w", err)
 	}
 
@@ -63,10 +63,9 @@ func (s *Service) WithObservability(ctx context.Context, name, endpoint string) 
 
 	a, err := aperture.New(capitan.Default(), lp, mp, tp)
 	if err != nil {
-		// Best-effort cleanup of providers on failure.
-		tp.Shutdown(ctx)  //nolint:errcheck
-		mp.Shutdown(ctx)  //nolint:errcheck
-		lp.Shutdown(ctx)  //nolint:errcheck
+		_ = tp.Shutdown(ctx)
+		_ = mp.Shutdown(ctx)
+		_ = lp.Shutdown(ctx)
 		return fmt.Errorf("observability aperture: %w", err)
 	}
 
@@ -99,15 +98,13 @@ type otelProviders struct {
 
 // Shutdown flushes and shuts down all OTEL providers in order: trace, meter, log.
 func (p *otelProviders) Shutdown(ctx context.Context) error {
-	var firstErr error
-	if err := p.trace.Shutdown(ctx); err != nil && firstErr == nil {
-		firstErr = err
+	traceErr := p.trace.Shutdown(ctx)
+	meterErr := p.meter.Shutdown(ctx)
+	logErr := p.logger.Shutdown(ctx)
+	for _, err := range []error{traceErr, meterErr, logErr} {
+		if err != nil {
+			return err
+		}
 	}
-	if err := p.meter.Shutdown(ctx); err != nil && firstErr == nil {
-		firstErr = err
-	}
-	if err := p.logger.Shutdown(ctx); err != nil && firstErr == nil {
-		firstErr = err
-	}
-	return firstErr
+	return nil
 }
