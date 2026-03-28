@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/zoobz-io/aperture"
+	"github.com/zoobz-io/capitan"
 	"github.com/zoobz-io/cereal"
 	"github.com/zoobz-io/rocco"
 	"github.com/zoobz-io/scio"
@@ -26,6 +27,7 @@ type Service struct {
 	encryptors map[cereal.EncryptAlgo]cereal.Encryptor
 	hashers    map[cereal.HashAlgo]cereal.Hasher
 	maskers    map[cereal.MaskType]cereal.Masker
+	closers    []namedCloser
 	engine     *rocco.Engine
 	catalog    *scio.Scio
 	codec      cereal.Codec
@@ -116,8 +118,9 @@ func (s *Service) Start(host string, port int) error {
 }
 
 // Shutdown gracefully stops the service.
-// Phases: (1) engine drains in-flight requests, (2) aperture closes capturing
-// final events, (3) OTEL providers flush and shutdown.
+// Phases: (1) engine drains in-flight requests, (2) infrastructure connectors
+// close in reverse connection order emitting disconnect signals, (3) aperture
+// closes capturing final events, (4) OTEL providers flush and shutdown.
 func (s *Service) Shutdown(ctx context.Context) error {
 	if s.engine == nil {
 		return fmt.Errorf("service not started")
@@ -126,17 +129,35 @@ func (s *Service) Shutdown(ctx context.Context) error {
 	// Phase 1: drain the HTTP engine.
 	err := s.engine.Shutdown(ctx)
 
-	// Phase 2: close aperture (flushes remaining events to OTEL).
 	s.mu.RLock()
+	closers := make([]namedCloser, len(s.closers))
+	copy(closers, s.closers)
 	a := s.aperture
 	p := s.providers
 	s.mu.RUnlock()
 
+	// Phase 2: close infrastructure in reverse connection order. Disconnect
+	// signals are emitted before aperture closes so they get captured.
+	for i := len(closers) - 1; i >= 0; i-- {
+		c := closers[i]
+		if cerr := c.closer.Close(); cerr != nil {
+			capitan.Error(ctx, SignalDisconnected,
+				KeyConnectorName.Field(c.name),
+				KeyConnectorError.Field(cerr),
+			)
+		} else {
+			capitan.Info(ctx, SignalDisconnected,
+				KeyConnectorName.Field(c.name),
+			)
+		}
+	}
+
+	// Phase 3: close aperture (flushes remaining events to OTEL).
 	if a != nil {
 		a.Close()
 	}
 
-	// Phase 3: shutdown OTEL providers (flush traces/metrics/logs to backend).
+	// Phase 4: shutdown OTEL providers (flush traces/metrics/logs to backend).
 	if p != nil {
 		if perr := p.Shutdown(ctx); perr != nil && err == nil {
 			err = perr
