@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/zoobz-io/capitan"
+	"github.com/zoobz-io/sentinel"
 )
 
 // Signals emitted during infrastructure lifecycle.
@@ -39,9 +40,13 @@ func Connect[T any](ctx context.Context, k Key, name string, factory func(contex
 		return fmt.Errorf("connect %s: %w", name, err)
 	}
 	Register[T](k, client)
+	typeName := reflect.TypeOf(client).String()
+	if meta, err := sentinel.TryInspect[T](); err == nil {
+		typeName = meta.FQDN
+	}
 	capitan.Info(ctx, SignalConnected,
 		KeyConnectorName.Field(name),
-		KeyConnectorType.Field(reflect.TypeOf(client).String()),
+		KeyConnectorType.Field(typeName),
 	)
 
 	if closer, ok := any(client).(io.Closer); ok {
