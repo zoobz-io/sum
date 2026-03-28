@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"reflect"
 
 	"github.com/zoobz-io/capitan"
 	"github.com/zoobz-io/sentinel"
@@ -40,7 +39,7 @@ func Connect[T any](ctx context.Context, k Key, name string, factory func(contex
 		return fmt.Errorf("connect %s: %w", name, err)
 	}
 	Register[T](k, client)
-	typeName := reflect.TypeOf(client).String()
+	typeName := name
 	if meta, err := sentinel.TryInspect[T](); err == nil {
 		typeName = meta.FQDN
 	}
