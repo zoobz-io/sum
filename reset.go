@@ -19,6 +19,11 @@ func Reset() {
 		instance.hashers = make(map[HashAlgo]Hasher)
 		instance.maskers = make(map[MaskType]Masker)
 		instance.codec = nil
+		if instance.aperture != nil {
+			instance.aperture.Close()
+		}
+		instance.aperture = nil
+		instance.providers = nil
 		instance.mu.Unlock()
 	}
 	instance = nil
