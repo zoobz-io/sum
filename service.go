@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/zoobz-io/aperture"
 	"github.com/zoobz-io/cereal"
 	"github.com/zoobz-io/rocco"
 	"github.com/zoobz-io/scio"
@@ -28,6 +29,8 @@ type Service struct {
 	engine     *rocco.Engine
 	catalog    *scio.Scio
 	codec      cereal.Codec
+	aperture   *aperture.Aperture
+	providers  *otelProviders
 	mu         sync.RWMutex
 }
 
@@ -113,11 +116,34 @@ func (s *Service) Start(host string, port int) error {
 }
 
 // Shutdown gracefully stops the service.
+// Phases: (1) engine drains in-flight requests, (2) aperture closes capturing
+// final events, (3) OTEL providers flush and shutdown.
 func (s *Service) Shutdown(ctx context.Context) error {
 	if s.engine == nil {
 		return fmt.Errorf("service not started")
 	}
-	return s.engine.Shutdown(ctx)
+
+	// Phase 1: drain the HTTP engine.
+	err := s.engine.Shutdown(ctx)
+
+	// Phase 2: close aperture (flushes remaining events to OTEL).
+	s.mu.RLock()
+	a := s.aperture
+	p := s.providers
+	s.mu.RUnlock()
+
+	if a != nil {
+		a.Close()
+	}
+
+	// Phase 3: shutdown OTEL providers (flush traces/metrics/logs to backend).
+	if p != nil {
+		if perr := p.Shutdown(ctx); perr != nil && err == nil {
+			err = perr
+		}
+	}
+
+	return err
 }
 
 // Run starts the service and blocks until a shutdown signal is received.
